@@ -4,10 +4,8 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity" >
 
-<!--     <com.xiaoying.ImageCutView  -->
-<!--         android:layout_width="match_parent" -->
-<!--         android:layout_height="match_parent"> -->
+    <com.xiaoying.imagecutdemo.widget.ImageCutView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
         
-<!--     </com.example.test.ImageCutView> -->
-
 </RelativeLayout>

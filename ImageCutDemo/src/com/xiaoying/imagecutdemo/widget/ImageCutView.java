@@ -1,11 +1,10 @@
 package com.xiaoying.imagecutdemo.widget;
 
-import com.example.imagecutdemo.R;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -13,6 +12,8 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.RelativeLayout;
+
+import com.xiaoying.imagecutdemo.R;
 
 public class ImageCutView extends FrameLayout {
 
@@ -34,6 +35,10 @@ public class ImageCutView extends FrameLayout {
 	private String tag = ImageCutView.class.getSimpleName();
 
 	private ImageView mImageView = null;
+	
+	private Matrix mImageMatrix = null;
+	
+	private float mScale = 1.0f;
 
 	public ImageCutView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
@@ -59,6 +64,8 @@ public class ImageCutView extends FrameLayout {
 		Bitmap bitmap = BitmapFactory.decodeStream(getResources().openRawResource(R.raw.pic2), null, options);
 //		mImageView.setBackgroundResource(R.drawable.pic3);
 		mImageView.setImageBitmap(bitmap);
+		mImageMatrix = new Matrix();
+		mImageView.setImageMatrix(mImageMatrix);
 		addView(mImageView, new FrameLayout.LayoutParams(
 				RelativeLayout.LayoutParams.WRAP_CONTENT,
 				FrameLayout.LayoutParams.WRAP_CONTENT));
@@ -126,12 +133,18 @@ public class ImageCutView extends FrameLayout {
 				float scale = mImageView.getScaleX();
 				if(Math.abs(Math.abs(nowX1 - nowX0) - Math.abs(lastX1 - lastX0))
 						> Math.abs(Math.abs(nowY1 - nowY0) - Math.abs(lastY1 - lastY0))) {
-					scale += (float) (Math.abs(nowX1 - nowX0) - Math.abs(lastX1 - lastX0)) / mImageView.getWidth() * 2;
+//					scale += (float) (Math.abs(nowX1 - nowX0) - Math.abs(lastX1 - lastX0)) / mImageView.getWidth() * 2;
+					mScale += (float) (Math.abs(nowX1 - nowX0) - Math.abs(lastX1 - lastX0)) / mImageView.getWidth() * 2;
 				} else {
-					scale += (float) (Math.abs(nowY1 - nowY0) - Math.abs(lastY1 - lastY0)) / mImageView.getHeight() * 2;
+//					scale += (float) (Math.abs(nowY1 - nowY0) - Math.abs(lastY1 - lastY0)) / mImageView.getHeight() * 2;
+					mScale += (float) (Math.abs(nowY1 - nowY0) - Math.abs(lastY1 - lastY0)) / mImageView.getHeight() * 2;
 				}
-				mImageView.setScaleX(scale);
-				mImageView.setScaleY(scale);
+				/** ImageView的setScaleX和setScaleY只适合API11或以上版本 */
+//				mImageView.setScaleX(scale);
+//				mImageView.setScaleY(scale);
+				mImageMatrix.postScale(mScale, mScale);
+				mImageView.setImageMatrix(mImageMatrix);
+				Log.e(tag, "Scale========" + mScale);
 				lastX0 = (int) event.getX(0);
 				lastY0 = (int) event.getY(0);
 				lastX1 = (int) event.getX(1);
@@ -142,6 +155,7 @@ public class ImageCutView extends FrameLayout {
 		case MotionEvent.ACTION_UP:
 		case MotionEvent.ACTION_POINTER_UP:
 			mMode = MODE_NONE;
+			/** ImageView的setScaleX和setScaleY只适合API11或以上版本 */
 			Log.e(tag, "Scale=========================>>>>>>>>>>" + mImageView.getScaleX());
 			Log.e(tag, "ImageView size++++++++++++++>>>>>>>（" + mImageView.getWidth() * mImageView.getScaleX() 
 					+ ", " + mImageView.getHeight() * mImageView.getScaleY() + ")");
