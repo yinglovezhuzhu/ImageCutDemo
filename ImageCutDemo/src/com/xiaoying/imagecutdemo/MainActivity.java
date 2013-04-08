@@ -1,6 +1,8 @@
-package com.example.imagecutdemo;
+package com.xiaoying.imagecutdemo;
 
 import java.io.InputStream;
+
+import com.example.imagecutdemo.R;
 
 import android.app.Activity;
 import android.graphics.Bitmap;

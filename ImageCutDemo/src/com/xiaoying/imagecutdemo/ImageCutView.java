@@ -1,4 +1,6 @@
-package com.example.imagecutdemo;
+package com.xiaoying.imagecutdemo;
+
+import com.example.imagecutdemo.R;
 
 import android.content.Context;
 import android.graphics.Bitmap;
