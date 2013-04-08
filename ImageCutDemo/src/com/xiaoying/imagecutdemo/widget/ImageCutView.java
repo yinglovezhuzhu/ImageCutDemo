@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.drawable.BitmapDrawable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -58,22 +59,25 @@ public class ImageCutView extends FrameLayout {
 	private void initView(Context cotnext) {
 
 		mImageView = new ImageView(getContext());
-		mImageView.setScaleType(ScaleType.CENTER);
+		mImageView.setScaleType(ScaleType.MATRIX);
 		BitmapFactory.Options options = new BitmapFactory.Options();
 		options.inSampleSize = 2;
 		Bitmap bitmap = BitmapFactory.decodeStream(getResources().openRawResource(R.raw.pic2), null, options);
 //		mImageView.setBackgroundResource(R.drawable.pic3);
-		mImageView.setImageBitmap(bitmap);
-		mImageMatrix = new Matrix();
+		mImageMatrix = new Matrix(mImageView.getImageMatrix());
+		mImageView.setScrollContainer(true);
 		mImageView.setImageMatrix(mImageMatrix);
+		mImageView.layout(0, 0, bitmap.getWidth(), bitmap.getHeight());
+		mImageView.setImageBitmap(bitmap);
+		System.out.println(bitmap.getWidth() + "<<<<<<<<<>>>>>>>>" +  bitmap.getHeight());
 		addView(mImageView, new FrameLayout.LayoutParams(
 				RelativeLayout.LayoutParams.WRAP_CONTENT,
 				FrameLayout.LayoutParams.WRAP_CONTENT));
-		ImageView iv = new ImageView(cotnext);
-		iv.setBackgroundColor(Color.argb(150, 00, 00, 00));
-		addView(iv, new FrameLayout.LayoutParams(
-				RelativeLayout.LayoutParams.MATCH_PARENT,
-				FrameLayout.LayoutParams.MATCH_PARENT));
+//		ImageView iv = new ImageView(cotnext);
+//		iv.setBackgroundColor(Color.argb(150, 00, 00, 00));
+//		addView(iv, new FrameLayout.LayoutParams(
+//				RelativeLayout.LayoutParams.MATCH_PARENT,
+//				FrameLayout.LayoutParams.MATCH_PARENT));
 		
 	}
 	
@@ -130,26 +134,31 @@ public class ImageCutView extends FrameLayout {
 				int nowY0 = (int) event.getY(0);
 				int nowX1 = (int) event.getX(1);
 				int nowY1 = (int) event.getY(1);
-				float scale = mImageView.getScaleX();
+				Matrix m = new Matrix(mImageView.getImageMatrix());
+//				float scale = mImageView.getScaleX();
 				if(Math.abs(Math.abs(nowX1 - nowX0) - Math.abs(lastX1 - lastX0))
 						> Math.abs(Math.abs(nowY1 - nowY0) - Math.abs(lastY1 - lastY0))) {
 //					scale += (float) (Math.abs(nowX1 - nowX0) - Math.abs(lastX1 - lastX0)) / mImageView.getWidth() * 2;
-					mScale += (float) (Math.abs(nowX1 - nowX0) - Math.abs(lastX1 - lastX0)) / mImageView.getWidth() * 2;
+//					mScale += (float) (Math.abs(nowX1 - nowX0) - Math.abs(lastX1 - lastX0)) / mImageView.getWidth() * 2;
+					mScale += 0.01f;
 				} else {
 //					scale += (float) (Math.abs(nowY1 - nowY0) - Math.abs(lastY1 - lastY0)) / mImageView.getHeight() * 2;
-					mScale += (float) (Math.abs(nowY1 - nowY0) - Math.abs(lastY1 - lastY0)) / mImageView.getHeight() * 2;
+//					mScale += (float) (Math.abs(nowY1 - nowY0) - Math.abs(lastY1 - lastY0)) / mImageView.getHeight() * 2;
+					mScale += 0.01f;
 				}
 				/** ImageView的setScaleX和setScaleY只适合API11或以上版本 */
 //				mImageView.setScaleX(scale);
 //				mImageView.setScaleY(scale);
-				mImageMatrix.postScale(mScale, mScale);
-				mImageView.setImageMatrix(mImageMatrix);
-				Log.e(tag, "Scale========" + mScale);
+				m.postScale(mScale, mScale, 
+						(mImageView.getRight() - mImageView.getLeft()) / 2, (mImageView.getBottom() - mImageView.getTop()) / 2);
+				mImageView.setImageMatrix(m);
 				lastX0 = (int) event.getX(0);
 				lastY0 = (int) event.getY(0);
 				lastX1 = (int) event.getX(1);
 				lastY1 = (int) event.getY(1);
 			}
+			Log.e(tag, "ImageView+++++++(" + mImageView.getLeft() + ", " + mImageView.getTop() + ", " 
+					+ mImageView.getRight() + ", " + mImageView.getBottom() + ")");
 			mImageView.postInvalidate();
 			break;
 		case MotionEvent.ACTION_UP:
