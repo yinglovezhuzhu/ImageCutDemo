@@ -1,4 +1,4 @@
-package com.xiaoying.imagecutdemo;
+package com.xiaoying.imagecutdemo.widget;
 
 import com.example.imagecutdemo.R;
 
