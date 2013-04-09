@@ -5,7 +5,8 @@
     tools:context=".MainActivity" >
 
     <com.xiaoying.imagecutdemo.widget.ImageCutView
+        android:id="@+id/icv_imageCutView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-        
+    
 </RelativeLayout>

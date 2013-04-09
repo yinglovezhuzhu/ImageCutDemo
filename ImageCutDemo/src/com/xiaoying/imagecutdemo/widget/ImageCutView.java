@@ -2,44 +2,41 @@ package com.xiaoying.imagecutdemo.widget;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.Matrix;
-import android.graphics.drawable.BitmapDrawable;
+import android.graphics.PointF;
 import android.util.AttributeSet;
+import android.util.FloatMath;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.RelativeLayout;
 
-import com.xiaoying.imagecutdemo.R;
-
 public class ImageCutView extends FrameLayout {
 
 	/** 拖动模式 */
-	private static final int MODE_DRAG = 1;	
+	private static final int MODE_DRAG = 1;
 	/** 缩放模式 */
 	private static final int MODE_ZOOM = 2;
 	/** 没有模式 */
 	private static final int MODE_NONE = 3;
-	
+
 	private int mMode = MODE_NONE;
 
-	int lastX0 = 0;
-	int lastY0 = 0;
-	
-	int lastX1 = 0;
-	int lastY1 = 0;
+	private ImageView mImageView = null;
+
+	// private Bitmap mBitmap = null;
+
+	private Matrix mMatrix = new Matrix();
+	private Matrix mSavedMatrix = new Matrix();
+
+	private PointF mStartPoint = new PointF();
+	private PointF mMidPoint = new PointF();
+	private float mOldDist = 1f;
 	
 	private String tag = ImageCutView.class.getSimpleName();
-
-	private ImageView mImageView = null;
-	
-	private Matrix mImageMatrix = null;
-	
-	private float mScale = 1.0f;
 
 	public ImageCutView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
@@ -56,127 +53,76 @@ public class ImageCutView extends FrameLayout {
 		initView(context);
 	}
 
-	private void initView(Context cotnext) {
+	public void setImageBitmap(Bitmap bitmap) {
+		// this.mBitmap = bitmap;
+		mImageView.setImageBitmap(bitmap);
+	}
+
+	private void initView(Context context) {
 
 		mImageView = new ImageView(getContext());
 		mImageView.setScaleType(ScaleType.MATRIX);
-		BitmapFactory.Options options = new BitmapFactory.Options();
-		options.inSampleSize = 2;
-		Bitmap bitmap = BitmapFactory.decodeStream(getResources().openRawResource(R.raw.pic2), null, options);
-//		mImageView.setBackgroundResource(R.drawable.pic3);
-		mImageMatrix = new Matrix(mImageView.getImageMatrix());
-		mImageView.setScrollContainer(true);
-		mImageView.setImageMatrix(mImageMatrix);
-		mImageView.layout(0, 0, bitmap.getWidth(), bitmap.getHeight());
-		mImageView.setImageBitmap(bitmap);
-		System.out.println(bitmap.getWidth() + "<<<<<<<<<>>>>>>>>" +  bitmap.getHeight());
 		addView(mImageView, new FrameLayout.LayoutParams(
-				RelativeLayout.LayoutParams.WRAP_CONTENT,
-				FrameLayout.LayoutParams.WRAP_CONTENT));
-//		ImageView iv = new ImageView(cotnext);
-//		iv.setBackgroundColor(Color.argb(150, 00, 00, 00));
-//		addView(iv, new FrameLayout.LayoutParams(
-//				RelativeLayout.LayoutParams.MATCH_PARENT,
-//				FrameLayout.LayoutParams.MATCH_PARENT));
-		
-	}
-	
+				RelativeLayout.LayoutParams.MATCH_PARENT,
+				FrameLayout.LayoutParams.MATCH_PARENT));
 
-	
-	@Override
-	public boolean onTouchEvent(MotionEvent event) {
-		switch (event.getAction() & MotionEvent.ACTION_MASK) {
-		case MotionEvent.ACTION_DOWN:
-			lastX0 = (int) event.getX();
-			lastY0 = (int) event.getY();
-			mMode = MODE_DRAG;
-			break;
-		case MotionEvent.ACTION_POINTER_DOWN:
-			lastX0 = (int) event.getX(0);
-			lastY0 = (int) event.getY(0);
-			lastX1 = (int) event.getX(1);
-			lastY1 = (int) event.getY(1);
-			mMode = MODE_ZOOM;
-			break;
-		case MotionEvent.ACTION_MOVE:
-			if (mMode == MODE_DRAG) {
-				int dx = (int) event.getX() - lastX0;
-				int dy = (int) event.getY() - lastY0;
-				int l = mImageView.getLeft() + dx;
-				int t = mImageView.getTop() + dy;
-				int r = mImageView.getRight() + dx;
-				int b = mImageView.getBottom() + dy;
-//				// 下面判断移动是否超出容器
-//				if (l < 0) {
-//					l = 0;
-//					r = (int) (l + mImageView.getWidth() * mImageView.getScaleX());
-//				}
-//
-//				if (t < 0) {
-//					t = 0;
-//					b = (int) (t + mImageView.getHeight() * mImageView.getScaleY());
-//				}
-//
-//				if (r > getWidth()) {
-//					r = getWidth();
-//					l = (int) (r - mImageView.getWidth() * mImageView.getScaleX());
-//				}
-//
-//				if (b > getHeight()) {
-//					b = getHeight();
-//					t = (int) (b - mImageView.getHeight() * mImageView.getScaleY());
-//				}
-				mImageView.layout(l, t, r, b);
-				lastX0 = (int) event.getX();
-				lastY0 = (int) event.getY();
-			} else if(mMode == MODE_ZOOM) {
-				int nowX0 = (int) event.getX(0);
-				int nowY0 = (int) event.getY(0);
-				int nowX1 = (int) event.getX(1);
-				int nowY1 = (int) event.getY(1);
-				Matrix m = new Matrix(mImageView.getImageMatrix());
-//				float scale = mImageView.getScaleX();
-				if(Math.abs(Math.abs(nowX1 - nowX0) - Math.abs(lastX1 - lastX0))
-						> Math.abs(Math.abs(nowY1 - nowY0) - Math.abs(lastY1 - lastY0))) {
-//					scale += (float) (Math.abs(nowX1 - nowX0) - Math.abs(lastX1 - lastX0)) / mImageView.getWidth() * 2;
-//					mScale += (float) (Math.abs(nowX1 - nowX0) - Math.abs(lastX1 - lastX0)) / mImageView.getWidth() * 2;
-					mScale += 0.01f;
-				} else {
-//					scale += (float) (Math.abs(nowY1 - nowY0) - Math.abs(lastY1 - lastY0)) / mImageView.getHeight() * 2;
-//					mScale += (float) (Math.abs(nowY1 - nowY0) - Math.abs(lastY1 - lastY0)) / mImageView.getHeight() * 2;
-					mScale += 0.01f;
+		mImageView.setOnTouchListener(new View.OnTouchListener() {
+
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				ImageView view = (ImageView) v;
+				switch (event.getAction() & MotionEvent.ACTION_MASK) {
+				case MotionEvent.ACTION_DOWN:
+					mMatrix.set(view.getImageMatrix());
+					mSavedMatrix.set(mMatrix);
+					mStartPoint.set(event.getX(), event.getY());
+					mMode = MODE_DRAG;
+					break;
+				case MotionEvent.ACTION_POINTER_DOWN:
+					Log.w("FLAG", "ACTION_POINTER_DOWN");
+					mOldDist = spacing(event);
+					if (mOldDist > 10f) {
+						mSavedMatrix.set(mMatrix);
+						midPoint(mMidPoint, event);
+						mMode = MODE_ZOOM;
+					}
+					break;
+				case MotionEvent.ACTION_MOVE:
+					Log.w("FLAG", "ACTION_MOVE");
+					if (mMode == MODE_DRAG) {
+						mMatrix.set(mSavedMatrix);
+						mMatrix.postTranslate(event.getX() - mStartPoint.x,
+								event.getY() - mStartPoint.y);
+					} else if (mMode == MODE_ZOOM) {
+						float newDist = spacing(event);
+						if (newDist > 10f) {
+							mMatrix.set(mSavedMatrix);
+							float scale = newDist / mOldDist;
+							mMatrix.postScale(scale, scale, mMidPoint.x, mMidPoint.y);
+						}
+					}
+					Log.e(tag, "-------------------" + mImageView.getLeft());
+					break;
+				case MotionEvent.ACTION_UP:
+				case MotionEvent.ACTION_POINTER_UP:
+					mMode = MODE_NONE;
+					break;
 				}
-				/** ImageView的setScaleX和setScaleY只适合API11或以上版本 */
-//				mImageView.setScaleX(scale);
-//				mImageView.setScaleY(scale);
-				m.postScale(mScale, mScale, 
-						(mImageView.getRight() - mImageView.getLeft()) / 2, (mImageView.getBottom() - mImageView.getTop()) / 2);
-				mImageView.setImageMatrix(m);
-				lastX0 = (int) event.getX(0);
-				lastY0 = (int) event.getY(0);
-				lastX1 = (int) event.getX(1);
-				lastY1 = (int) event.getY(1);
+				view.setImageMatrix(mMatrix);
+				return true;
 			}
-			Log.e(tag, "ImageView+++++++(" + mImageView.getLeft() + ", " + mImageView.getTop() + ", " 
-					+ mImageView.getRight() + ", " + mImageView.getBottom() + ")");
-			mImageView.postInvalidate();
-			break;
-		case MotionEvent.ACTION_UP:
-		case MotionEvent.ACTION_POINTER_UP:
-			mMode = MODE_NONE;
-			/** ImageView的setScaleX和setScaleY只适合API11或以上版本 */
-			Log.e(tag, "Scale=========================>>>>>>>>>>" + mImageView.getScaleX());
-			Log.e(tag, "ImageView size++++++++++++++>>>>>>>（" + mImageView.getWidth() * mImageView.getScaleX() 
-					+ ", " + mImageView.getHeight() * mImageView.getScaleY() + ")");
-			break;
-		default:
-			break;
-		}
-		return true;
+		});
 	}
-	
-	@Override
-	public boolean onInterceptTouchEvent(MotionEvent ev) {
-		return true;
+
+	private float spacing(MotionEvent event) {
+		float x = event.getX(0) - event.getX(1);
+		float y = event.getY(0) - event.getY(1);
+		return FloatMath.sqrt(x * x + y * y);
+	}
+
+	private void midPoint(PointF point, MotionEvent event) {
+		float x = event.getX(0) + event.getX(1);
+		float y = event.getY(0) + event.getY(1);
+		point.set(x / 2, y / 2);
 	}
 }
