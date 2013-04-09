@@ -152,22 +152,22 @@ public class ImageCutView extends FrameLayout {
 			mMatrix.set(mSavedMatrix);
 			float transX = event.getX() - mStartPoint.x;
 			float transY = event.getY() - mStartPoint.y;
-			LogUtil.e(tag, "TransX = " + transX + "<>TransY = " + transY);
-			Log.i(tag, "MSCALE_X = " + mMatrixValues[0] + "; MSKEW_X = " + mMatrixValues[1] + "; MTRANS_X = " + mMatrixValues[2]
-					+ "; \nMSCALE_Y = " + mMatrixValues[4] + "; MSKEW_Y = " + mMatrixValues[3] + "; MTRANS_Y = " + mMatrixValues[5]
-							+ "; \nMPERSP_0 = " + mMatrixValues[6] + "; MPERSP_1 = " + mMatrixValues[7] + "; MPERSP_2 = " + mMatrixValues[8]);
 			mMatrix.getValues(mMatrixValues);
-			if(transX > 0 && transX > mImageFocusView.getFocusLeft() - mMatrixValues[2]) {
-				transX = mImageFocusView.getFocusLeft() - mMatrixValues[2];
+			float leftLimit = mImageFocusView.getFocusLeft() - mMatrixValues[2];
+			float topLimit = mImageFocusView.getFocusTop() - mMatrixValues[5];
+			float rightLimit = mImageFocusView.getFocusRight() - (mBitmap.getWidth() * mMatrixValues[0] + mMatrixValues[2]);
+			float bottomLimit = mImageFocusView.getFocusBottom() - (mBitmap.getHeight() * mMatrixValues[0] + mMatrixValues[5]);
+			if(transX > 0 && transX > leftLimit) {
+				transX = leftLimit;
 			}
-			if(transY > 0 && transY > mImageFocusView.getFocusTop() - mMatrixValues[5]) {
-				transY = mImageFocusView.getFocusTop() - mMatrixValues[5];
+			if(transY > 0 && transY > topLimit) {
+				transY = topLimit;
 			}
-			if(transX < 0 && transX < mImageFocusView.getFocusRight() - (mBitmap.getWidth() * mMatrixValues[0] + mMatrixValues[2])) {
-				transX = mImageFocusView.getFocusRight() - (mBitmap.getWidth() * mMatrixValues[0] + mMatrixValues[2]);
+			if(transX < 0 && transX < rightLimit) {
+				transX = rightLimit;
 			}
-			if(transY < 0 && transY < mImageFocusView.getFocusBottom() - (mBitmap.getHeight() * mMatrixValues[0] + mMatrixValues[5])) {
-				transY = mImageFocusView.getFocusBottom() - (mBitmap.getHeight() * mMatrixValues[0] + mMatrixValues[5]);
+			if(transY < 0 && transY < bottomLimit) {
+				transY = bottomLimit;
 			}
 			mMatrix.postTranslate(transX, transY);
 		} else if (mMode == MODE_ZOOM) {
