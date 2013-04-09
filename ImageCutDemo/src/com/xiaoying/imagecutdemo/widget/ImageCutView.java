@@ -142,7 +142,8 @@ public class ImageCutView extends FrameLayout {
 		mOldDist = spacing(event);
 		if (mOldDist > 10f) {
 			mSavedMatrix.set(mMatrix);
-			midPoint(mMidPoint, event);
+//			midPoint(mMidPoint, event);
+			mMidPoint.set(mImageFocusView.getFocusMidPoint());
 			mMode = MODE_ZOOM;
 		}
 	}
@@ -174,7 +175,12 @@ public class ImageCutView extends FrameLayout {
 			float newDist = spacing(event);
 			if (newDist > 10f) {
 				mMatrix.set(mSavedMatrix);
+				float minScale = (float) mImageFocusView.getFocusWidth() / Math.min(mBitmap.getWidth(), mBitmap.getHeight());
+				mMatrix.getValues(mMatrixValues);
 				float scale = newDist / mOldDist;
+				if(mMatrixValues[0] * scale < minScale) {
+					scale = minScale / mMatrixValues[0];
+				}
 				mMatrix.postScale(scale, scale, mMidPoint.x, mMidPoint.y);
 			}
 		}
