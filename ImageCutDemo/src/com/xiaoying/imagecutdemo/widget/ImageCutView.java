@@ -102,10 +102,10 @@ public class ImageCutView extends FrameLayout {
 			case MotionEvent.ACTION_POINTER_UP:
 				mMode = MODE_NONE;
 				
-//				mMatrix.getValues(mMatrixValues);
-//				Log.i(tag, "MSCALE_X = " + mMatrixValues[0] + "; MSKEW_X = " + mMatrixValues[1] + "; MTRANS_X = " + mMatrixValues[2]
-//						+ "; \nMSCALE_Y = " + mMatrixValues[4] + "; MSKEW_Y = " + mMatrixValues[3] + "; MTRANS_Y = " + mMatrixValues[5]
-//								 + "; \nMPERSP_0 = " + mMatrixValues[6] + "; MPERSP_1 = " + mMatrixValues[7] + "; MPERSP_2 = " + mMatrixValues[8]);
+				mMatrix.getValues(mMatrixValues);
+				Log.i(tag, "MSCALE_X = " + mMatrixValues[0] + "; MSKEW_X = " + mMatrixValues[1] + "; MTRANS_X = " + mMatrixValues[2]
+						+ "; \nMSCALE_Y = " + mMatrixValues[4] + "; MSKEW_Y = " + mMatrixValues[3] + "; MTRANS_Y = " + mMatrixValues[5]
+								 + "; \nMPERSP_0 = " + mMatrixValues[6] + "; MPERSP_1 = " + mMatrixValues[7] + "; MPERSP_2 = " + mMatrixValues[8]);
 				break;
 			}
 			mImageView.setImageMatrix(mMatrix);

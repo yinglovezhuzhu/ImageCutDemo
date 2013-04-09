@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 
 import com.xiaoying.imagecutdemo.util.LogUtil;
 import com.xiaoying.imagecutdemo.widget.ImageCutView;
@@ -37,8 +36,8 @@ public class MainActivity extends Activity {
 				BitmapFactory.Options options = new BitmapFactory.Options();
 //		options.inJustDecodeBounds = true;
 //		BitmapFactory.decodeStream(getResources().openRawResource(R.raw.pic3), null, options);
-				options.inSampleSize = 1;
-				Bitmap bitmap = BitmapFactory.decodeStream(getResources().openRawResource(R.raw.pic3), null, options);
+				options.inSampleSize = 2;
+				Bitmap bitmap = BitmapFactory.decodeStream(getResources().openRawResource(R.raw.pic2), null, options);
 				mImageCutView.setImageBitmap(bitmap);
 //			}
 //		});
