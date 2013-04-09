@@ -37,7 +37,7 @@ public class ImageCutView extends FrameLayout {
 	private float mOldDist = 1f;
 	
 	private String tag = ImageCutView.class.getSimpleName();
-
+	
 	public ImageCutView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 		initView(context);
@@ -60,59 +60,70 @@ public class ImageCutView extends FrameLayout {
 
 	private void initView(Context context) {
 
-		mImageView = new ImageView(getContext());
+		mImageView = new ImageView(context);
 		mImageView.setScaleType(ScaleType.MATRIX);
 		addView(mImageView, new FrameLayout.LayoutParams(
 				RelativeLayout.LayoutParams.MATCH_PARENT,
 				FrameLayout.LayoutParams.MATCH_PARENT));
+		ImageFocusView ifv = new ImageFocusView(context);
+		addView(ifv, new FrameLayout.LayoutParams(
+				RelativeLayout.LayoutParams.MATCH_PARENT,
+				FrameLayout.LayoutParams.MATCH_PARENT));
+		
 
-		mImageView.setOnTouchListener(new View.OnTouchListener() {
-
-			@Override
-			public boolean onTouch(View v, MotionEvent event) {
-				ImageView view = (ImageView) v;
-				switch (event.getAction() & MotionEvent.ACTION_MASK) {
-				case MotionEvent.ACTION_DOWN:
-					mMatrix.set(view.getImageMatrix());
-					mSavedMatrix.set(mMatrix);
-					mStartPoint.set(event.getX(), event.getY());
-					mMode = MODE_DRAG;
-					break;
-				case MotionEvent.ACTION_POINTER_DOWN:
-					Log.w("FLAG", "ACTION_POINTER_DOWN");
-					mOldDist = spacing(event);
-					if (mOldDist > 10f) {
-						mSavedMatrix.set(mMatrix);
-						midPoint(mMidPoint, event);
-						mMode = MODE_ZOOM;
-					}
-					break;
-				case MotionEvent.ACTION_MOVE:
-					Log.w("FLAG", "ACTION_MOVE");
-					if (mMode == MODE_DRAG) {
-						mMatrix.set(mSavedMatrix);
-						mMatrix.postTranslate(event.getX() - mStartPoint.x,
-								event.getY() - mStartPoint.y);
-					} else if (mMode == MODE_ZOOM) {
-						float newDist = spacing(event);
-						if (newDist > 10f) {
-							mMatrix.set(mSavedMatrix);
-							float scale = newDist / mOldDist;
-							mMatrix.postScale(scale, scale, mMidPoint.x, mMidPoint.y);
-						}
-					}
-					Log.e(tag, "-------------------" + mImageView.getLeft());
-					break;
-				case MotionEvent.ACTION_UP:
-				case MotionEvent.ACTION_POINTER_UP:
-					mMode = MODE_NONE;
-					break;
-				}
-				view.setImageMatrix(mMatrix);
-				return true;
-			}
-		});
+		mImageView.setOnTouchListener(mOntouchListener);
 	}
+	
+	View.OnTouchListener mOntouchListener = new View.OnTouchListener() {
+		
+		@Override
+		public boolean onTouch(View v, MotionEvent event) {
+			ImageView imageView = (ImageView) v;
+			switch (event.getAction() & MotionEvent.ACTION_MASK) {
+			case MotionEvent.ACTION_DOWN:
+				mMatrix.set(imageView.getImageMatrix());
+				mSavedMatrix.set(mMatrix);
+				mStartPoint.set(event.getX(), event.getY());
+				mMode = MODE_DRAG;
+				break;
+			case MotionEvent.ACTION_POINTER_DOWN:
+				mOldDist = spacing(event);
+				if (mOldDist > 10f) {
+					mSavedMatrix.set(mMatrix);
+					midPoint(mMidPoint, event);
+					mMode = MODE_ZOOM;
+				}
+				break;
+			case MotionEvent.ACTION_MOVE:
+				Log.w("FLAG", "ACTION_MOVE");
+				if (mMode == MODE_DRAG) {
+					mMatrix.set(mSavedMatrix);
+					mMatrix.postTranslate(event.getX() - mStartPoint.x,
+							event.getY() - mStartPoint.y);
+					
+				} else if (mMode == MODE_ZOOM) {
+					float newDist = spacing(event);
+					if (newDist > 10f) {
+						mMatrix.set(mSavedMatrix);
+						float scale = newDist / mOldDist;
+						mMatrix.postScale(scale, scale, mMidPoint.x, mMidPoint.y);
+					}
+				}
+				break;
+			case MotionEvent.ACTION_UP:
+			case MotionEvent.ACTION_POINTER_UP:
+				mMode = MODE_NONE;
+				float [] values = new float[9];
+				mMatrix.getValues(values);
+				Log.i(tag, "MSCALE_X = " + values[0] + "; MSKEW_X = " + values[1] + "; MTRANS_X = " + values[2]
+						+ "; \nMSCALE_Y = " + values[4] + "; MSKEW_Y = " + values[3] + "; MTRANS_Y = " + values[5]
+								 + "; \nMPERSP_0 = " + values[6] + "; MPERSP_1 = " + values[7] + "; MPERSP_2 = " + values[8]);
+				break;
+			}
+			imageView.setImageMatrix(mMatrix);
+			return true;
+		}
+	};
 
 	private float spacing(MotionEvent event) {
 		float x = event.getX(0) - event.getX(1);
