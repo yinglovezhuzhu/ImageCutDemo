@@ -5,7 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
-import android.graphics.Point;
+import android.graphics.PointF;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -29,9 +29,8 @@ public class ImageFocusView extends View {
 	
 	private float mStrokWidth = 3.0f;
 	
-	private Point mFocusMidPoint = new Point();
+	private PointF mFocusMidPoint = new PointF();
 	
-
 	public ImageFocusView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 	}
@@ -64,10 +63,10 @@ public class ImageFocusView extends View {
 		LogUtil.i(tag, "View content+++++(" + getLeft() + ", " + getTop() + ", " 
 				+ getRight() + ", " + getBottom() + ")");
 		mFocusMidPoint.set((getRight() - getLeft()) / 2, (getBottom() - getTop()) / 2);
-		mFocusLeft = mFocusMidPoint.x - mFocusWidth / 2;
-		mFocusTop = mFocusMidPoint.y - mFocusWidth / 2;
-		mFocusRight = mFocusMidPoint.x + mFocusWidth / 2;
-		mFocusBottom = mFocusMidPoint.y + mFocusWidth / 2;
+		mFocusLeft = (int) (mFocusMidPoint.x - mFocusWidth / 2);
+		mFocusTop = (int) (mFocusMidPoint.y - mFocusWidth / 2);
+		mFocusRight = (int) (mFocusMidPoint.x + mFocusWidth / 2);
+		mFocusBottom = (int) (mFocusMidPoint.y + mFocusWidth / 2);
 		LogUtil.i(tag, "Focus content=====(" + getFocusLeft() + ", " + getFocusTop() + ", "
 				+ getFocusRight() + ", " + getFocusBottom() + ")");
 	}
@@ -108,7 +107,7 @@ public class ImageFocusView extends View {
 	 * 返回焦点框中间点坐标
 	 * @return
 	 */
-	public Point getFocusMidPoint() {
+	public PointF getFocusMidPoint() {
 		return mFocusMidPoint;
 	}
 
@@ -119,6 +118,15 @@ public class ImageFocusView extends View {
 	public int getFocusWidth() {
 		return mFocusWidth;
 	}
+	
+	/**
+	 * 设置焦点框的宽度
+	 * @param width
+	 */
+	public void setFocusWidth(int width) {
+		this.mFocusWidth = width;
+		postInvalidate();
+	}
 
 	/**
 	 * 返回阴影颜色
@@ -126,6 +134,15 @@ public class ImageFocusView extends View {
 	 */
 	public int getHideColor() {
 		return mHideColor;
+	}
+	
+	/**
+	 * 设置阴影颜色
+	 * @param color
+	 */
+	public void setHidColor(int color) {
+		this.mHideColor = color;
+		postInvalidate();
 	}
 
 	/**
@@ -135,6 +152,15 @@ public class ImageFocusView extends View {
 	public int getFocusColor() {
 		return mFocusColor;
 	}
+	
+	/**
+	 * 设置焦点框边框颜色
+	 * @param color
+	 */
+	public void setFocusColor(int color) {
+		this.mFocusColor = color;
+		postInvalidate();
+	}
 
 	/**
 	 * 返回焦点框边框绘制宽度
@@ -143,4 +169,14 @@ public class ImageFocusView extends View {
 	public float getStrokWidth() {
 		return mStrokWidth;
 	}
+	
+	/**
+	 * 设置焦点边框宽度
+	 * @param width
+	 */
+	public void setStrokWidth(float width) {
+		this.mStrokWidth = width;
+		postInvalidate();
+	}
+	
 }
