@@ -195,6 +195,7 @@ public class ImageCutView extends FrameLayout {
 		if(scale > 1) {
 			mMatrix.postScale(scale, scale);
 		}
+		LogUtil.e(tag, "==========" + getBottom());
 		mImageView.setImageMatrix(mMatrix);
 	}
 
