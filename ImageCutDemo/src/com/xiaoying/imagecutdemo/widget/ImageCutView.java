@@ -41,10 +41,12 @@ public class ImageCutView extends FrameLayout {
 	private Matrix mSavedMatrix = new Matrix();
 
 	private PointF mStartPoint = new PointF();
-	private PointF mMidPoint = new PointF();
+	private PointF mZoomPoint = new PointF();
 	private float mOldDist = 1f;
 	
-	float [] mMatrixValues = new float[9];
+	private float [] mMatrixValues = new float[9];
+	
+	private float mMiniScale = 1f;
 	
 	private String tag = ImageCutView.class.getSimpleName();
 	
@@ -142,8 +144,9 @@ public class ImageCutView extends FrameLayout {
 		mOldDist = spacing(event);
 		if (mOldDist > 10f) {
 			mSavedMatrix.set(mMatrix);
-//			midPoint(mMidPoint, event);
-			mMidPoint.set(mImageFocusView.getFocusMidPoint());
+			midPoint(mZoomPoint, event);
+//			mZoomPoint.set(mImageFocusView.getFocusMidPoint());
+			mMiniScale = (float) mImageFocusView.getFocusWidth() / Math.min(mBitmap.getWidth(), mBitmap.getHeight());
 			mMode = MODE_ZOOM;
 		}
 	}
@@ -175,13 +178,12 @@ public class ImageCutView extends FrameLayout {
 			float newDist = spacing(event);
 			if (newDist > 10f) {
 				mMatrix.set(mSavedMatrix);
-				float minScale = (float) mImageFocusView.getFocusWidth() / Math.min(mBitmap.getWidth(), mBitmap.getHeight());
 				mMatrix.getValues(mMatrixValues);
 				float scale = newDist / mOldDist;
-				if(mMatrixValues[0] * scale < minScale) {
-					scale = minScale / mMatrixValues[0];
+				if(mMatrixValues[0] * scale < mMiniScale) {
+					scale = mMiniScale / mMatrixValues[0];
 				}
-				mMatrix.postScale(scale, scale, mMidPoint.x, mMidPoint.y);
+				mMatrix.postScale(scale, scale, mZoomPoint.x, mZoomPoint.y);
 			}
 		}
 	}
