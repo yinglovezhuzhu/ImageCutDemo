@@ -50,6 +50,12 @@ public class ImageCutView extends FrameLayout {
 	
 	private String tag = ImageCutView.class.getSimpleName();
 	
+//	Matrix的Value是一个3x3的矩阵，文档中的Matrix获取数据的方法是void getValues(float[] values)，对于Matrix内字段的顺序
+//	并没有很明确的说明，经过测试发现他的顺序是这样的
+//	MSCALE_X	MSKEW_X		MTRANS_X
+//	MSKEW_Y		MSCALE_Y	MTRANS_Y
+//	MPERSP_0	MPERSP_1	MPERSP_2	
+	
 	public ImageCutView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 		initView(context);
@@ -67,9 +73,8 @@ public class ImageCutView extends FrameLayout {
 
 	public void setImageBitmap(Bitmap bitmap) {
 		this.mBitmap = bitmap;
-		mImageView.setScaleType(ScaleType.CENTER);
+		mImageView.setScaleType(ScaleType.FIT_CENTER);
 		mImageView.setImageBitmap(bitmap);
-		setFitFocus(bitmap);
 	}
 
 	private void initView(Context context) {
@@ -103,7 +108,6 @@ public class ImageCutView extends FrameLayout {
 			case MotionEvent.ACTION_UP:
 			case MotionEvent.ACTION_POINTER_UP:
 				mMode = MODE_NONE;
-				
 				mMatrix.getValues(mMatrixValues);
 				Log.i(tag, "MSCALE_X = " + mMatrixValues[0] + "; MSKEW_X = " + mMatrixValues[1] + "; MTRANS_X = " + mMatrixValues[2]
 						+ "; \nMSCALE_Y = " + mMatrixValues[4] + "; MSKEW_Y = " + mMatrixValues[3] + "; MTRANS_Y = " + mMatrixValues[5]
@@ -115,20 +119,52 @@ public class ImageCutView extends FrameLayout {
 		}
 	};
 	
-	public void getCutImageBitmap() {
-		int left = (int)((mImageFocusView.getFocusLeft() - mMatrixValues[2]) / mMatrixValues[0]);
-		int top = (int)((mImageFocusView.getFocusTop() - mMatrixValues[5]) / mMatrixValues[4]);
-		int width = (int)(mImageFocusView.getFocusWidth() / mMatrixValues[0]);
-		int height = (int)(mImageFocusView.getFocusWidth() / mMatrixValues[4]);
-		Bitmap bmp = Bitmap.createBitmap(mBitmap, 
-				left,
-				top, 
-				width, 
-				height);
-		try {
-			bmp.compress(CompressFormat.JPEG, 100, new FileOutputStream(new File("/sdcard/cutimage.jpg")));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+	/**
+	 * 保存剪切的
+	 * @param path 图像保存位置
+	 * @return 剪切的图像
+	 */
+	public Bitmap cutImageBitmap(String path) throws FileNotFoundException {
+		if(mBitmap != null) {
+//			焦点框内的图片为缩放的图片，起始坐标（相对屏幕）有可能小于零，
+//			可以通过0 + (mImageFocusView.getFocusLeft() - mMatrixValues[2])获得真实的坐标（图片时从0开始的），
+//			但是这个还是缩放的，别忘了除以缩放比例
+			int left = (int)((mImageFocusView.getFocusLeft() - mMatrixValues[2]) / mMatrixValues[0]);
+			int top = (int)((mImageFocusView.getFocusTop() - mMatrixValues[5]) / mMatrixValues[4]);
+			int right = (int) ((mImageFocusView.getFocusRight() - mMatrixValues[2]) / mMatrixValues[0]);
+			int bottom = (int) ((mImageFocusView.getFocusBottom() - mMatrixValues[5]) / mMatrixValues[4]);
+			correctSize(left, top, right, bottom);
+			Bitmap bitmap = Bitmap.createBitmap(mBitmap, left, top, right - left, bottom - top);
+			bitmap.compress(CompressFormat.JPEG, 100, new FileOutputStream(new File(path)));
+			return bitmap;
+		}
+		return null;
+	}
+	
+	/**
+	 * 修正图片，获得真实的边界（防止焦点框不包含图片外部时出错）
+	 * @param left
+	 * @param top
+	 * @param right
+	 * @param bottom
+	 */
+	private void correctSize(int left, int top, int right, int bottom) {
+		mMatrix.getValues(mMatrixValues);
+		int bitmapLeft = (int) mMatrixValues[2];
+		int bitmapTop = (int) mMatrixValues[5];
+		int bitmapRight = (int) (mBitmap.getWidth() * mMatrixValues[0] - mMatrixValues[2]);
+		int bitmapBottom = (int) (mBitmap.getHeight() * mMatrixValues[4] - mMatrixValues[5]);
+		if(bitmapLeft > mImageFocusView.getFocusLeft()) {
+			left += (bitmapLeft - mImageFocusView.getFocusLeft()) / mMatrixValues[0];
+		}
+		if(bitmapTop > mImageFocusView.getFocusTop()) {
+			top += (bitmapTop - mImageFocusView.getFocusTop()) / mMatrixValues[4];
+		}
+		if(bitmapRight < mImageFocusView.getFocusRight()) {
+			right -= (mImageFocusView.getFocusRight() - bitmapRight) / mMatrixValues[0];
+		}
+		if(bitmapBottom < mImageFocusView.getFocusBottom()) {
+			bottom -= (mImageFocusView.getFocusBottom() - bitmapBottom) / mMatrixValues[4];
 		}
 	}
 	
@@ -186,17 +222,6 @@ public class ImageCutView extends FrameLayout {
 				mMatrix.postScale(scale, scale, mZoomPoint.x, mZoomPoint.y);
 			}
 		}
-	}
-	
-	private void setFitFocus(Bitmap bitmap) {
-		mImageView.setScaleType(ScaleType.MATRIX);
-		mMatrix.set(mImageView.getImageMatrix());
-		float scale = (float) mImageFocusView.getFocusWidth() / Math.min(bitmap.getWidth(), bitmap.getHeight());
-		if(scale > 1) {
-			mMatrix.postScale(scale, scale);
-		}
-		LogUtil.e(tag, "==========" + getBottom());
-		mImageView.setImageMatrix(mMatrix);
 	}
 
 	private float spacing(MotionEvent event) {

@@ -1,12 +1,16 @@
 package com.xiaoying.imagecutdemo;
 
+import java.io.FileNotFoundException;
+
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.xiaoying.imagecutdemo.util.LogUtil;
 import com.xiaoying.imagecutdemo.widget.ImageCutView;
@@ -28,19 +32,13 @@ public class MainActivity extends Activity {
 		
 		mImageCutView = (ImageCutView) findViewById(R.id.icv_imageCutView);
 		
-//		findViewById(R.id.btn_button).setOnClickListener(new View.OnClickListener() {
-//			
-//			@Override
-//			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				BitmapFactory.Options options = new BitmapFactory.Options();
-//		options.inJustDecodeBounds = true;
-//		BitmapFactory.decodeStream(getResources().openRawResource(R.raw.pic3), null, options);
-				options.inSampleSize = 2;
-				Bitmap bitmap = BitmapFactory.decodeStream(getResources().openRawResource(R.raw.pic2), null, options);
-				mImageCutView.setImageBitmap(bitmap);
-//			}
-//		});
+		BitmapFactory.Options options = new BitmapFactory.Options();
+		options.inJustDecodeBounds = true;
+		BitmapFactory.decodeStream(getResources().openRawResource(R.raw.pic1), null, options);
+		options.inJustDecodeBounds = false;
+		options.inSampleSize = options.outWidth / mMetrics.widthPixels;
+		Bitmap bitmap = BitmapFactory.decodeStream(getResources().openRawResource(R.raw.pic1), null, options);
+		mImageCutView.setImageBitmap(bitmap);
 	}
 	
 	@Override
@@ -54,7 +52,18 @@ public class MainActivity extends Activity {
 		switch (item.getItemId()) {
 		case R.id.action_cut:
 			LogUtil.e(tag, "ImageCut");
-			mImageCutView.getCutImageBitmap();
+			if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+				try {
+					String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/image.jpg";
+					mImageCutView.cutImageBitmap(path);
+					Toast.makeText(this, "已保存至" + path, Toast.LENGTH_SHORT).show();
+				} catch (FileNotFoundException ex){
+					ex.printStackTrace();
+					Toast.makeText(this, "保存失败", Toast.LENGTH_SHORT).show();
+				}
+			} else {
+				Toast.makeText(this, "请插入Sdcard", Toast.LENGTH_SHORT).show();
+			}
 			break;
 		default:
 			break;
